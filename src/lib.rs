@@ -22,11 +22,16 @@ impl Weights {
         let mut rng = rand::thread_rng();
         Self {
             w: (0..NUM_CLASSES)
-                .map(|_| (0..IMAGE_SIZE).map(|_| rng.gen_range(-0.01..0.01)).collect())
+                .map(|_| {
+                    (0..IMAGE_SIZE)
+                        .map(|_| rng.gen_range(-0.01..0.01))
+                        .collect()
+                })
                 .collect(),
             b: vec![0.0; NUM_CLASSES],
         }
     }
+
 
     pub fn zeros() -> Self {
         Self {
@@ -42,9 +47,9 @@ pub fn forward(pixels: &[f32], weights: &Weights) -> usize {
         .map(|c| {
             let score: f32 = weights.w[c]
                 .iter()
-                .zip(pixels.iter())
-                .map(|(w, x)| w * x)
-                .sum::<f32>()
+                .zip(pixels.iter())  // pair each weight with its corresponding pixel
+                .map(|(w, x)| w * x) // multiply each weight-pixel pair together
+                .sum::<f32>()        // sum all products into a dot product
                 + weights.b[c];
             (c, score)
         })
