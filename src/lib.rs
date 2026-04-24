@@ -73,7 +73,7 @@ pub fn load_mnist(max_train: usize, max_test: usize) -> (Vec<Sample>, Vec<Sample
 // Convert raw bytes into Sample structs.
 // chunks(IMAGE_SIZE) splits the flat byte array into one slice per image.
 // zip pairs each image slice with its label.
-fn to_samples(images: Vec<u8>, labels: Vec<u8>, limit: usize) -> Vec<Sample> {
+pub fn to_samples(images: Vec<u8>, labels: Vec<u8>, limit: usize) -> Vec<Sample> {
         images.chunks(IMAGE_SIZE).zip(labels.iter()).take(limit).map(|(chunk, &lbl)| Sample {
             // Normalize pixel values from [0, 255] to [0.0, 1.0]
             pixels: chunk.iter().map(|&p| p as f32 / 255.0).collect(),

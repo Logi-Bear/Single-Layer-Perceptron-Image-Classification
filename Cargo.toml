@@ -7,3 +7,11 @@ edition = "2024"
 mnist = "0.6.0"
 rand = "0.8.5"
 rayon = "1.11.0"
+
+[[bin]]
+name = "slp"
+path = "src/main.rs"
+
+[lib]
+name = "slp"
+path = "src/lib.rs"

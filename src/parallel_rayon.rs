@@ -6,18 +6,20 @@ use slp::{forward, Sample, Weights, IMAGE_SIZE, NUM_CLASSES};
 // Strategy: divide samples into chunks, process all chunks in parallel,
 // then aggregate the resulting deltas and apply them once per epoch.
 // No locks needed — threads never share mutable state during computation.
-pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, batch_size: usize) -> Weights {
+pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, batch_size: usize, show_data: bool) -> Weights {
     let mut weights = Weights::random();
 
     for epoch in 0..epochs {
         // par_chunks splits the slice into chunks of batch_size and processes them in parallel across Rayon's thread pool.
         // Each chunk produces a local Weights delta — no shared state here.
-        let delta = samples.par_chunks(batch_size).map(|batch| {
+        let (delta, mistakes) = samples.par_chunks(batch_size).map(|batch| {
             // Each thread accumulates its own local delta — no locking needed
             let mut local = Weights::zeros();
+            let mut local_mistakes = 0usize;
             for sample in batch {
                 let predicted = forward(&sample.pixels, &weights);
                 if predicted != sample.label {
+                    local_mistakes += 1;
                     // Same update rule as sequential, but into local delta instead of weights
                     for i in 0..IMAGE_SIZE {
                         local.w[sample.label][i] += learning_rate * sample.pixels[i];
@@ -27,15 +29,15 @@ pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, batch_size: 
                     local.b[predicted]    -= learning_rate;
                 }
             }
-            local
-        }).reduce(Weights::zeros, |mut acc, d| {    // .reduce() folds all the per-chunk deltas into one combined delta. Weights::zeros is the identity value (like 0 in addition).
-            for c in 0..NUM_CLASSES {               // This runs after all threads finish — it's sequential but very fast.
-                for i in 0..IMAGE_SIZE {
-                    acc.w[c][i] += d.w[c][i];
+            (local, local_mistakes)
+        }).reduce(|| (Weights::zeros(), 0), | (mut acc_w, acc_m), (d, m) | {    // .reduce() folds all the per-chunk deltas into one combined delta. Weights::zeros is the identity value (like 0 in addition).
+                for c in 0..NUM_CLASSES {                                       // This runs after all threads finish — it's sequential but very fast.
+                    for i in 0..IMAGE_SIZE {
+                        acc_w.w[c][i] += d.w[c][i];
+                    }
+                    acc_w.b[c] += d.b[c];
                 }
-                acc.b[c] += d.b[c];
-            }
-            acc
+            (acc_w, acc_m + m)
         });
 
         // Apply the aggregated delta to the real weights once per epoch
@@ -45,8 +47,9 @@ pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, batch_size: 
             }
             weights.b[c] += delta.b[c];
         }
-
-        println!("epoch {}/{} complete", epoch + 1, epochs);
+        if show_data{
+            println!("epoch {}/{} — training error: {:.1}%", epoch + 1, epochs, mistakes as f64 / samples.len() as f64 * 100.0);
+        }
     }
     weights
 }

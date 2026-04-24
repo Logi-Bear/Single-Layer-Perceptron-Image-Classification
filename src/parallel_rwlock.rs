@@ -10,7 +10,7 @@ use slp::{forward, Sample, Weights, IMAGE_SIZE, NUM_CLASSES};
 // the delta back. The write lock serializes the update step — only one
 // thread can write at a time. This causes more contention than Rayon
 // but updates the live weights more frequently, which helps accuracy.
-pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, num_threads: usize, batch_size: usize) -> Weights {
+pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, num_threads: usize, batch_size: usize, show_data: bool) -> Weights {
     // Wrap weights in Arc<RwLock> so they can be safely shared across threads.
     // Arc = shared ownership (reference counted).
     // RwLock = many readers allowed, only one writer at a time.
@@ -19,6 +19,7 @@ pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, num_threads:
     for epoch in 0..epochs {
         // Split training data into owned chunks — threads need owned data
         // because borrowed data can't be sent across thread boundaries in Rust
+        let mut mistakes = 0usize;
         let chunks: Vec<Vec<Sample>> = samples.chunks(batch_size).map(|c| c.to_vec()).collect();
 
         // Process num_threads chunks at a time
@@ -41,9 +42,11 @@ pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, num_threads:
                     // Step 2: compute our delta using the snapshot — no lock held here.
                     // This is the bulk of the work and runs fully in parallel.
                     let mut delta = Weights::zeros();
+                    let mut local_mistakes = 0usize;
                     for sample in &batch {
                         let predicted = forward(&sample.pixels, &snapshot);
                         if predicted != sample.label {
+                            local_mistakes += 1;
                             for i in 0..IMAGE_SIZE {
                                 delta.w[sample.label][i] += lr * sample.pixels[i];
                                 delta.w[predicted][i]    -= lr * sample.pixels[i];
@@ -64,16 +67,18 @@ pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, num_threads:
                         }
                         w.b[c] += delta.b[c];
                     }
+                    local_mistakes
                 })
             }).collect();
 
             // Wait for all threads in this group to finish before starting the next group
             for h in handles {
-                h.join().unwrap();
+                mistakes += h.join().unwrap();
             }
         }
-
-        println!("epoch {}/{} complete", epoch + 1, epochs);
+        if show_data{
+            println!("epoch {}/{} — training error: {:.1}%", epoch + 1, epochs, mistakes as f64 / samples.len() as f64 * 100.0);
+        }
     }
 
     // Training is done — unwrap the Arc (we're the only owner now) to get the

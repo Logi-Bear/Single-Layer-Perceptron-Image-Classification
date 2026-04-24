@@ -2,7 +2,7 @@ use slp::{forward, Sample, Weights, IMAGE_SIZE};
 
 // Train a perceptron sequentially — one sample at a time, one thread.
 // This is the ground-truth baseline everything else is compared against.
-pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32) -> Weights {
+pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32, show_data: bool) -> Weights {
     let mut weights = Weights::random();
 
     for epoch in 0..epochs {
@@ -28,8 +28,9 @@ pub fn train(samples: &[Sample], epochs: usize, learning_rate: f32) -> Weights {
                 weights.b[predicted]    -= learning_rate;
             }
         }
-
+        if show_data {
         println!("epoch {}/{} — training error: {:.1}%", epoch + 1, epochs, mistakes as f64 / samples.len() as f64 * 100.0);
+        }
     }
 
     weights
