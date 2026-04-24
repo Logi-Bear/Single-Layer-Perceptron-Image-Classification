@@ -236,9 +236,9 @@ fn main() {
     }
     let rayon_end = results.len();
 
-    // 3. RwLock scalability sweep: 1, 2, 4, 8, 12 threads
+    // 3. RwLock scalability sweep: 1, 2, 4, 8, 12, 16, 20, 24 threads
     let rwlock_start = results.len();
-    for &t in &[1_usize, 2, 4, 8, 12] {
+    for &t in &[1_usize, 2, 4, 8, 12, 16, 20, 24] {
         results.push(averaged_benchmark(
             &format!("RwLock t={t}"), t, batch,
             &train, &test, &labels, epochs, attempts,
@@ -254,5 +254,5 @@ fn main() {
     print_batch_scalability_table(&results, &rayon_indices, "Rayon (batch 32 -> 128 -> 512)");
 
     let rwlock_indices: Vec<usize> = (rwlock_start..rwlock_end).collect();
-    print_thread_scalability_table(&results, &rwlock_indices, "RwLock (1 -> 2 -> 4 -> 8 -> 12 threads)");
+    print_thread_scalability_table(&results, &rwlock_indices, "RwLock (1 -> 2 -> 4 -> 8 -> 12 -> 16 -> 20 -> 24 threads)");
 }

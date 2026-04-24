@@ -4,15 +4,13 @@
 
 ### Device 1 — Laptop (Razer Blade 15)
 - CPU: Intel Core i7-8750H
-- Cores: 6 physical / 12 logical
+- Cores: 6 cores / 12 threads
 - RAM: 16 GB DDR4-2667 MHz
-- OS: Windows 10 Home (64-bit)
 
 ### Device 2 — Desktop
-- CPU: [model]
-- Cores: [physical] / [logical]
-- RAM: [amount]
-- OS: [OS]
+- CPU: Intel Core i9 12900k
+- Cores: 16 cores (8 Performance + 8 Efficient) + 24 threads
+- RAM: 32 GB (2× 16GB TEAMGROUP UD4-3200 DDR4)
 
 ## Configuration
 - Dataset: 60,000 train / 10,000 test (MNIST)
@@ -42,14 +40,17 @@
 
 | Method      | Threads | Batch | Train |  Infer  | Accuracy | Speedup | Efficiency | Overhead |  Throughput  |
 |-------------|---------|-------|-------|---------|----------|---------|------------|----------|--------------|
-| Sequential  | 1       | N/A   |       |       |          |         |            |             |
-| Rayon b=32  | [max]   | 32    |       |       |          |         |            |             |
-| Rayon b=128 | [max]   | 128   |       |       |          |         |            |             |
-| Rayon b=512 | [max]   | 512   |       |       |          |         |            |             |
-| RwLock t=1  | 1       | 128   |       |       |          |         |            |             |
-| RwLock t=2  | 2       | 128   |       |       |          |         |            |             |
-| RwLock t=4  | 4       | 128   |       |       |          |         |            |             |
-| RwLock t=8  | 8       | 128   |       |       |          |         |            |             |
-| RwLock t=12 | 12      | 128   |       |       |          |         |            |             |
+|Sequential:  |        1|    N/A|  2.83s|  30.10ms|    86.90%|    1.00x|      100.0%|    0.000s|  317,981img/s|
+|Rayon b=32:  |       24|     32|  0.21s|   1.83ms|    80.83%|   13.47x|       56.1%|    0.092s|4,287,662img/s|
+|Rayon b=128: |       24|    128|  0.19s|   1.83ms|    80.14%|   14.84x|       61.8%|    0.073s|4,717,902img/s|
+|Rayon b=512: |       24|    512|  0.19s|   1.82ms|    78.10%|   14.59x|       60.8%|    0.076s|4,643,296img/s|
+|RwLock t=1:  |        1|    128|  4.49s|  30.26ms|    86.99%|    0.63x|       63.0%|    0.000s|  200,685img/s|
+|RwLock t=2:  |        2|    128|  2.50s|  30.61ms|    89.28%|    1.13x|       56.5%|    1.090s|  359,772img/s|
+|RwLock t=4:  |        4|    128|  1.70s|  30.90ms|    90.68%|    1.66x|       41.6%|    0.993s|  530,601img/s|
+|RwLock t=8:  |        8|    128|  1.28s|  31.21ms|    91.27%|    2.22x|       27.7%|    0.924s|  704,767img/s|
+|RwLock t=12: |       12|    128|  1.18s|  31.17ms|    89.76%|    2.41x|       20.1%|    0.940s|  766,056img/s|
+|RwLock t=16: |       16|    128|  1.04s|  31.01ms|    91.16%|    2.72x|       17.0%|    0.863s|  865,528img/s|
+|RwLock t=20: |       20|    128|  1.01s|  31.02ms|    89.53%|    2.81x|       14.0%|    0.867s|  892,466img/s|
+|RwLock t=24: |       24|    128|  0.97s|  30.95ms|    86.08%|    2.92x|       12.2%|    0.850s|  929,641img/s|
 
 ---
