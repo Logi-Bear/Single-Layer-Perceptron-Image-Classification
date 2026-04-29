@@ -25,12 +25,12 @@ It measures the performance tradeoffs between concurrency models in Rust.
 ## Setup Instructions
 
 ### 1. Download the MNIST dataset
-Download the four MNIST binary files from http://yann.lecun.com/exdb/mnist/ and place them in a `data/` folder in the project root:
+Download the four MNIST binary files from https://www.kaggle.com/datasets/hojjatk/mnist-dataset and place them in a `data/` folder in the project root:\
 data/\
 ├── train-images-idx3-ubyte\
 ├── train-labels-idx1-ubyte\
 ├── t10k-images-idx3-ubyte\
-└── t10k-labels-idx1-ubyte\
+└── t10k-labels-idx1-ubyte
 
 ### 2. Build and run
 ```bash
@@ -59,7 +59,7 @@ Single-Layer-Perceptron-Image-Classification/\
 ├── tests/\
 │   └── integration_test.rs   # Integration tests\
 └── benchmarks/\
-└── results.md            # Benchmark results for both devices\
+└── results.md            # Benchmark results for both devices
 
 ---
 
