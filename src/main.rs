@@ -210,7 +210,7 @@ fn main() {
     let epochs = 15;
     let lr = 0.01f32;
     let show_epochs = false;
-    let attempts = 5000;
+    let attempts = 10;
     let batch = 128;
 
     let mut results: Vec<BenchResult> = Vec::new();
